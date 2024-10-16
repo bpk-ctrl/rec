@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video and Audio Recording Website</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+        video {
+            border: 1px solid #ccc;
+            margin-bottom: 10px;
+        }
+        button {
+            margin: 5px;
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Video and Audio Recording</h1>
+    <video id="video" width="640" height="480" autoplay></video>
+    <video id="recorded" width="640" height="480" controls></video>
+    <button id="start">Start Recording</button>
+    <button id="stop" disabled>Stop Recording</button>
+
+    <script>
+        const video = document.getElementById('video');
+        const recordedVideo = document.getElementById('recorded');
+        const startButton = document.getElementById('start');
+        const stopButton = document.getElementById('stop');
+
+        let mediaRecorder;
+        let recordedChunks = [];
+
+        // Access the webcam and microphone
+        navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+            .then(stream => {
+                video.srcObject = stream;
+
+                // Create a MediaRecorder instance
+                mediaRecorder = new MediaRecorder(stream);
+
+                // When data is available, push it to the recordedChunks array
+                mediaRecorder.ondataavailable = event => {
+                    if (event.data.size > 0) {
+                        recordedChunks.push(event.data);
+                    }
+                };
+
+                // When recording stops, create a blob and set it as the source for the recorded video
+                mediaRecorder.onstop = () => {
+                    const blob = new Blob(recordedChunks, { type: 'video/webm' });
+                    const url = URL.createObjectURL(blob);
+                    recordedVideo.src = url;
+                    recordedChunks = []; // Reset the chunks for the next recording
+                };
+            })
+            .catch(error => {
+                console.error('Error accessing webcam and microphone: ', error);
+            });
+
+        // Start recording
+        startButton.addEventListener('click', () => {
+            mediaRecorder.start();
+            startButton.disabled = true;
+            stopButton.disabled = false;
+        });
+
+        // Stop recording
+        stopButton.addEventListener('click', () => {
+            mediaRecorder.stop();
+            startButton.disabled = false;
+            stopButton.disabled = true;
+        });
+    </script>
+
+</body>
+</html>
