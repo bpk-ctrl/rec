@@ -12,15 +12,35 @@
             align-items: center;
             justify-content: center;
             height: 100vh;
-            background-color: #f0f0f0;
+            background-color: #333; /* Dark gray background */
+            color: #fff; /* White text color */
+            margin: 0;
+        }
+        h1 {
+            margin-bottom: 20px;
+            font-size: 2em;
         }
         button {
             margin: 10px;
             padding: 10px 20px;
             font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:disabled {
+            background-color: #555; /* Darker gray for disabled button */
+            cursor: not-allowed;
+        }
+        button:not(:disabled):hover {
+            background-color: #444; /* Darker gray on hover */
         }
         audio {
             margin-top: 20px;
+            border: 1px solid #fff; /* White border for audio player */
+            border-radius: 5px;
+            background-color: #444; /* Darker background for audio player */
         }
     </style>
 </head>
@@ -36,23 +56,28 @@
         let audioChunks = [];
 
         document.getElementById('startBtn').addEventListener('click', async () => {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            mediaRecorder = new MediaRecorder(stream);
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
 
-            mediaRecorder.start();
-            document.getElementById('startBtn').disabled = true;
-            document.getElementById('stopBtn').disabled = false;
+                mediaRecorder.start();
+                document.getElementById('startBtn').disabled = true;
+                document.getElementById('stopBtn').disabled = false;
 
-            mediaRecorder.addEventListener('dataavailable', event => {
-                audioChunks.push(event.data);
-            });
+                mediaRecorder.addEventListener('dataavailable', event => {
+                    audioChunks.push(event.data);
+                });
 
-            mediaRecorder.addEventListener('stop', () => {
-                const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-                const audioUrl = URL.createObjectURL(audioBlob);
-                document.getElementById('audioPlayback').src = audioUrl;
-                audioChunks = [];
-            });
+                mediaRecorder.addEventListener('stop', () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    const audioUrl = URL.createObjectURL(audioBlob);
+                    document.getElementById('audioPlayback').src = audioUrl;
+                    audioChunks = [];
+                });
+            } catch (error) {
+                console.error('Error accessing microphone:', error);
+                alert('Could not access the microphone. Please check your permissions.');
+            }
         });
 
         document.getElementById('stopBtn').addEventListener('click', () => {
