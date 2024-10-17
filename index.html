@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,104 +6,154 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Audio Recorder</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            background-color: #333; /* Dark gray background */
-            color: #fff; /* White text color */
-            margin: 0;
+    body {
+        font-family: Arial, sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        background-color: #333; /* Dark gray background */
+        color: #fff; /* White text color */
+        margin: 0;
+    }
+    h1 {
+        margin-bottom: 20px;
+        font-size: 2em;
+    }
+    .record-button {
+        width: 100px; /* Width of the outer circular button */
+        height: 100px; /* Height of the outer circular button */
+        border-radius: 50%; /* Make it circular */
+        background-color: white; /* White color */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        position: relative; /* For positioning the inner circle */
+        transition: background-color 0.3s;
+    }
+    .inner-circle {
+        width: 40px; /* Width of the inner circle */
+        height: 40px; /* Height of the inner circle */
+        border-radius: 50%; /* Make it circular */
+        background-color: red; /* Red color */
+        transition: all 0.3s; /* Smooth transition for shape change */
+    }
+    .record-button.pulsating {
+        animation: pulsate 1s infinite; /* Pulsating animation */
+    }
+    @keyframes pulsate {
+        0% {
+            transform: scale(1);
+            opacity: 1;
         }
-        h1 {
-            margin-bottom: 20px;
-            font-size: 2em;
+        50% {
+            transform: scale(1.1);
+            opacity: 0.7;
         }
-        button {
-            margin: 10px;
-            padding: 10px 20px;
-            font-size: 16px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s;
+        100% {
+            transform: scale(1);
+            opacity: 1;
         }
-        button:disabled {
-            background-color: #555; /* Darker gray for disabled button */
-            cursor: not-allowed;
-        }
-        button:not(:disabled):hover {
-            background-color: #444; /* Darker gray on hover */
-        }
-        audio {
-            margin-top: 20px;
-            border: 1px solid #fff; /* White border for audio player */
-            border-radius: 5px;
-            background-color: #444; /* Darker background for audio player */
-        }
-        a {
-            margin-top: 20px;
-            color: #1e90ff; /* Bright blue color for download link */
-            text-decoration: none;
-            font-size: 16px;
-        }
-        a:hover {
-            text-decoration: underline; /* Underline on hover */
-        }
+    }
+    .record-button.pulsating .inner-circle {
+        border-radius: 10%; /* Change to rounded square */
+        width: 50px; /* Increase size while recording */
+        height: 50px; /* Increase size while recording */
+    }
+    audio {
+        margin-top: 20px;
+        border: 1px solid #fff; /* White border for audio player */
+        border-radius: 5px;
+        background-color: #444; /* Darker background for audio player */
+    }
+    a {
+        margin-top: 20px;
+        color: #1e90ff; /* Bright blue color for download link */
+        text-decoration: none;
+        font-size: 16px;
+    }
+    a:hover {
+        text-decoration: underline; /* Underline on hover */
+    }
+
+    #downloadLink {
+    margin-top: 20px;
+    padding: 10px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 5px;
+    background-color: #1e90ff; /* Bright blue color */
+    color: white; /* White text color */
+    cursor: pointer;
+    display: none; /* Initially hidden */
+    transition: background-color 0.3s;
+    }
+    
+    #downloadLink:hover {
+    background-color: #1c7bbf; /* Darker blue on hover */
+    }
+    
     </style>
 </head>
 <body>
 
     <h1>Audio Recorder</h1>
-    <button id="startBtn">Start Recording</button>
-    <button id="stopBtn" disabled>Stop Recording</button>
+    <div id="toggleBtn" class="record-button">
+    <div class="inner-circle"></div>
+    </div>
     <audio id="audioPlayback" controls></audio>
-    <a id="downloadLink" style="display: none;">Download Recording</a>
+    <button id="downloadLink" style="display: none;">Download Recording</button>
 
     <script>
-        let mediaRecorder;
-        let audioChunks = [];
-
-        document.getElementById('startBtn').addEventListener('click', async () => {
+    let mediaRecorder;
+    let audioChunks = [];
+    let isRecording = false; // Track recording state
+    
+    document.getElementById('toggleBtn').addEventListener('click', async () => {
+        if (isRecording) {
+            // Stop recording
+            mediaRecorder.stop();
+            document.getElementById('toggleBtn').classList.remove('pulsating'); // Remove pulsating effect
+        } else {
+            // Start recording
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 mediaRecorder = new MediaRecorder(stream);
-
+                
                 mediaRecorder.start();
-                document.getElementById('startBtn').disabled = true;
-                document.getElementById('stopBtn').disabled = false;
-
+                document.getElementById('toggleBtn').classList.add('pulsating'); // Add pulsating effect
+                isRecording = true; // Update recording state
+                
                 mediaRecorder.addEventListener('dataavailable', event => {
                     audioChunks.push(event.data);
                 });
-
+                
                 mediaRecorder.addEventListener('stop', () => {
                     const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
                     const audioUrl = URL.createObjectURL(audioBlob);
                     document.getElementById('audioPlayback').src = audioUrl;
-
+                    
                     // Create a download link
                     const downloadLink = document.getElementById('downloadLink');
                     downloadLink.href = audioUrl;
                     downloadLink.download = 'recording.webm'; // Set the filename
                     downloadLink.style.display = 'block'; // Show the download link
-
+                    
                     audioChunks = [];
+                    isRecording = false; // Reset recording state
                 });
             } catch (error) {
                 console.error('Error accessing microphone:', error);
                 alert('Could not access the microphone. Please check your permissions.');
             }
-        });
+        }
+    });
+    
+    
+        </script>
 
-        document.getElementById('stopBtn').addEventListener('click', () => {
-            mediaRecorder.stop();
-            document.getElementById('startBtn').disabled = false;
-            document.getElementById('stopBtn').disabled = true;
-        });
-    </script>
+    </body>
+    </html>
 
-</body>
-</html>
