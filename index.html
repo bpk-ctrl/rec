@@ -42,6 +42,15 @@
             border-radius: 5px;
             background-color: #444; /* Darker background for audio player */
         }
+        a {
+            margin-top: 20px;
+            color: #1e90ff; /* Bright blue color for download link */
+            text-decoration: none;
+            font-size: 16px;
+        }
+        a:hover {
+            text-decoration: underline; /* Underline on hover */
+        }
     </style>
 </head>
 <body>
@@ -50,6 +59,7 @@
     <button id="startBtn">Start Recording</button>
     <button id="stopBtn" disabled>Stop Recording</button>
     <audio id="audioPlayback" controls></audio>
+    <a id="downloadLink" style="display: none;">Download Recording</a>
 
     <script>
         let mediaRecorder;
@@ -72,6 +82,13 @@
                     const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
                     const audioUrl = URL.createObjectURL(audioBlob);
                     document.getElementById('audioPlayback').src = audioUrl;
+
+                    // Create a download link
+                    const downloadLink = document.getElementById('downloadLink');
+                    downloadLink.href = audioUrl;
+                    downloadLink.download = 'recording.webm'; // Set the filename
+                    downloadLink.style.display = 'block'; // Show the download link
+
                     audioChunks = [];
                 });
             } catch (error) {
