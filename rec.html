@@ -5,19 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Video Recorder</title>
     <style>
+        /* Add your existing styles here */
         body {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             height: 100vh;
-            background-color: #1a1a1a; /* Very dark gray */
+            background-color: #1a1a1a;
             font-family: Arial, sans-serif;
             margin: 0;
-            color: #f0f0f0; /* Light text color for contrast */
+            color: #f0f0f0;
         }
         h1 {
-            color: #f0f0f0; /* Light text color */
+            color: #f0f0f0;
             margin-bottom: 20px;
         }
         video {
@@ -34,8 +35,8 @@
             border-radius: 5px;
             cursor: pointer;
             transition: background-color 0.3s, transform 0.2s;
-            background-color: #007BFF; /* Button background color */
-            color: white; /* Button text color */
+            background-color: #007BFF;
+            color: white;
         }
         button:disabled {
             background-color: #ccc;
@@ -48,13 +49,6 @@
         button:not(:disabled):active {
             transform: scale(0.95);
         }
-        @media (max-width: 700px) {
-            video {
-                width: 100%;
-                height: auto;
-            }
-        }
-
         /* Popup Styles */
         #popup {
             display: none;
@@ -131,6 +125,9 @@
             <button id="downloadMP4">Download as MP4</button>
         </div>
     </div>
+
+    <!-- Include FFmpeg.js -->
+    <script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@latest"></script>
 
     <script>
         const video = document.getElementById('video');
@@ -215,15 +212,40 @@
             }
         });
 
-        // Download video as MP4 (using WebM as fallback, as real MP4 conversion on the client side is complex)
-        downloadMP4Button.addEventListener('click', () => {
+        // Download video as MP4 (using ffmpeg.js)
+        downloadMP4Button.addEventListener('click', async () => {
             if (recordedChunks.length > 0) {
-                const blob = new Blob(recordedChunks, { type: 'video/mp4' }); // Note: In reality, you'd need a server-side conversion
-                const url = URL.createObjectURL(blob);
+                // Create a WebM blob from the recorded chunks
+                const webmBlob = new Blob(recordedChunks, { type: 'video/webm' });
+                const webmUrl = URL.createObjectURL(webmBlob);
+
+                // Initialize FFmpeg.js
+                const { createFFmpeg, fetchFile } = FFmpeg;
+                const ffmpeg = createFFmpeg({ log: true });
+
+                // Load ffmpeg.wasm (This needs to be done before using FFmpeg)
+                await ffmpeg.load();
+
+                // Write the WebM video file to the virtual filesystem in FFmpeg
+                await ffmpeg.FS('writeFile', 'input.webm', await fetchFile(webmUrl));
+
+                // Run FFmpeg command to convert WebM to MP4
+                await ffmpeg.run('-i', 'input.webm', 'output.mp4');
+
+                // Read the resulting MP4 file from FFmpeg's virtual filesystem
+                const mp4Data = ffmpeg.FS('readFile', 'output.mp4');
+
+                // Create a Blob from the MP4 data
+                const mp4Blob = new Blob([mp4Data.buffer], { type: 'video/mp4' });
+                const mp4Url = URL.createObjectURL(mp4Blob);
+
+                // Create a link element and trigger the download
                 const a = document.createElement('a');
-                a.href = url;
+                a.href = mp4Url;
                 a.download = 'recorded-video.mp4';
                 a.click();
+
+                // Close the popup
                 popup.style.display = 'none';
             }
         });
