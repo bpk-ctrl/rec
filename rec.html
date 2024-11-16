@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Video Recorder</title>
     <style>
-        /* Add your existing styles here */
         body {
             display: flex;
             flex-direction: column;
@@ -49,7 +48,6 @@
         button:not(:disabled):active {
             transform: scale(0.95);
         }
-        /* Popup Styles */
         #popup {
             display: none;
             position: fixed;
@@ -74,13 +72,9 @@
             color: #f0f0f0;
             margin-bottom: 20px;
         }
-        .popup-content button {
-            background-color: #28a745;
+        .popup-content button, .popup-content progress {
             width: 100%;
             margin: 10px 0;
-        }
-        .popup-content button:hover {
-            background-color: #218838;
         }
         .close-btn {
             position: absolute;
@@ -95,13 +89,29 @@
         .close-btn:hover {
             color: #ff6f61;
         }
-
         .download-btn {
-            background-color: #28a745; /* Green background */
+            background-color: #28a745;
             color: white;
         }
         .download-btn:hover {
             background-color: #218838;
+        }
+        /* Progress Bar Styling */
+        progress {
+            -webkit-appearance: none;
+            appearance: none;
+            height: 10px;
+            border-radius: 5px;
+            background-color: #555;
+        }
+        progress::-webkit-progress-bar {
+            background-color: #555;
+        }
+        progress::-webkit-progress-value {
+            background-color: #28a745;
+        }
+        progress::-moz-progress-bar {
+            background-color: #28a745;
         }
     </style>
 </head>
@@ -123,6 +133,9 @@
             <h2>Select Download Format</h2>
             <button id="downloadWebM">Download as WebM</button>
             <button id="downloadMP4">Download as MP4</button>
+
+            <!-- Progress Bar for MP4 Conversion -->
+            <progress id="conversionProgress" value="0" max="100" style="display: none;"></progress>
         </div>
     </div>
 
@@ -139,6 +152,7 @@
         const closePopupButton = document.getElementById('closePopup');
         const downloadWebMButton = document.getElementById('downloadWebM');
         const downloadMP4Button = document.getElementById('downloadMP4');
+        const conversionProgress = document.getElementById('conversionProgress');
 
         let mediaRecorder;
         let recordedChunks = [];
@@ -223,13 +237,28 @@
                 const { createFFmpeg, fetchFile } = FFmpeg;
                 const ffmpeg = createFFmpeg({ log: true });
 
-                // Load ffmpeg.wasm (This needs to be done before using FFmpeg)
+                // Load ffmpeg.wasm
                 await ffmpeg.load();
 
                 // Write the WebM video file to the virtual filesystem in FFmpeg
                 await ffmpeg.FS('writeFile', 'input.webm', await fetchFile(webmUrl));
 
-                // Run FFmpeg command to convert WebM to MP4
+                // Update progress bar when conversion starts
+                conversionProgress.style.display = 'block';
+
+                // Run FFmpeg command to convert WebM to MP4 and handle progress
+                let progressInterval = setInterval(() => {
+                    if (ffmpeg._ffmpeg.FS('readdir', '/').includes('output.mp4')) {
+                        // In a real-world scenario, you'd probably want to check actual progress logs here
+                        // For simplicity, we're simulating a 100% progress bar here
+                        conversionProgress.value = 100;
+                        clearInterval(progressInterval);
+                    } else {
+                        conversionProgress.value = 10; // Simulate a small progress increase
+                    }
+                }, 1000);
+
+                // Run the conversion command
                 await ffmpeg.run('-i', 'input.webm', 'output.mp4');
 
                 // Read the resulting MP4 file from FFmpeg's virtual filesystem
@@ -245,8 +274,9 @@
                 a.download = 'recorded-video.mp4';
                 a.click();
 
-                // Close the popup
+                // Close the popup and hide progress bar
                 popup.style.display = 'none';
+                conversionProgress.style.display = 'none';
             }
         });
     </script>
