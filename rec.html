@@ -54,6 +54,61 @@
                 height: auto;
             }
         }
+
+        /* Popup Styles */
+        #popup {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .popup-content {
+            background-color: #2d2d2d;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            width: 300px;
+        }
+        .popup-content h2 {
+            color: #f0f0f0;
+            margin-bottom: 20px;
+        }
+        .popup-content button {
+            background-color: #28a745;
+            width: 100%;
+            margin: 10px 0;
+        }
+        .popup-content button:hover {
+            background-color: #218838;
+        }
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: transparent;
+            border: none;
+            font-size: 20px;
+            color: white;
+            cursor: pointer;
+        }
+        .close-btn:hover {
+            color: #ff6f61;
+        }
+
+        .download-btn {
+            background-color: #28a745; /* Green background */
+            color: white;
+        }
+        .download-btn:hover {
+            background-color: #218838;
+        }
     </style>
 </head>
 <body>
@@ -65,12 +120,28 @@
         <button id="start">Start Recording</button>
         <button id="stop" disabled>Stop Recording</button>
     </div>
+    <button id="downloadBtn" class="download-btn" disabled>Download Video</button>
+
+    <!-- Popup Modal -->
+    <div id="popup">
+        <div class="popup-content">
+            <button class="close-btn" id="closePopup">&times;</button>
+            <h2>Select Download Format</h2>
+            <button id="downloadWebM">Download as WebM</button>
+            <button id="downloadMP4">Download as MP4</button>
+        </div>
+    </div>
 
     <script>
         const video = document.getElementById('video');
         const recordedVideo = document.getElementById('recorded');
         const startButton = document.getElementById('start');
         const stopButton = document.getElementById('stop');
+        const downloadButton = document.getElementById('downloadBtn');
+        const popup = document.getElementById('popup');
+        const closePopupButton = document.getElementById('closePopup');
+        const downloadWebMButton = document.getElementById('downloadWebM');
+        const downloadMP4Button = document.getElementById('downloadMP4');
 
         let mediaRecorder;
         let recordedChunks = [];
@@ -96,6 +167,9 @@
                     const url = URL.createObjectURL(blob);
                     recordedVideo.src = url;
                     recordedChunks = []; // Reset the chunks for the next recording
+
+                    // Enable the download button after recording
+                    downloadButton.disabled = false;
                 };
             })
             .catch(error => {
@@ -114,6 +188,38 @@
             mediaRecorder.stop();
             startButton.disabled = false;
             stopButton.disabled = true;
+        });
+
+        // Show the popup when the download button is clicked
+        downloadButton.addEventListener('click', () => {
+            popup.style.display = 'flex';
+        });
+
+        // Close the popup
+        closePopupButton.addEventListener('click', () => {
+            popup.style.display = 'none';
+        });
+
+        // Download video as WebM
+        downloadWebMButton.addEventListener('click', () => {
+            const blob = new Blob(recordedChunks, { type: 'video/webm' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'recorded-video.webm';
+            a.click();
+            popup.style.display = 'none';
+        });
+
+        // Download video as MP4 (using WebM as fallback, as real MP4 conversion on the client side is complex)
+        downloadMP4Button.addEventListener('click', () => {
+            const blob = new Blob(recordedChunks, { type: 'video/mp4' }); // Note: In reality, you'd need a server-side conversion
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'recorded-video.mp4';
+            a.click();
+            popup.style.display = 'none';
         });
     </script>
 
