@@ -11,16 +11,48 @@
             align-items: center;
             justify-content: center;
             height: 100vh;
-            background-color: #f0f0f0;
+            background-color: #1a1a1a; /* Very dark gray */
+            font-family: Arial, sans-serif;
+            margin: 0;
+            color: #f0f0f0; /* Light text color for contrast */
+        }
+        h1 {
+            color: #f0f0f0; /* Light text color */
+            margin-bottom: 20px;
         }
         video {
-            border: 1px solid #ccc;
+            border: 2px solid #007BFF;
+            border-radius: 8px;
             margin-bottom: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
         button {
             margin: 5px;
             padding: 10px 20px;
             font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+            background-color: #007BFF; /* Button background color */
+            color: white; /* Button text color */
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        button:not(:disabled):hover {
+            background-color: #0056b3;
+            transform: scale(1.05);
+        }
+        button:not(:disabled):active {
+            transform: scale(0.95);
+        }
+        @media (max-width: 700px) {
+            video {
+                width: 100%;
+                height: auto;
+            }
         }
     </style>
 </head>
@@ -29,8 +61,10 @@
     <h1>Video and Audio Recording</h1>
     <video id="video" width="640" height="480" autoplay></video>
     <video id="recorded" width="640" height="480" controls></video>
-    <button id="start">Start Recording</button>
-    <button id="stop" disabled>Stop Recording</button>
+    <div>
+        <button id="start">Start Recording</button>
+        <button id="stop" disabled>Stop Recording</button>
+    </div>
 
     <script>
         const video = document.getElementById('video');
