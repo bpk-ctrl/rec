@@ -163,13 +163,15 @@
 
                 // When recording stops, create a blob and set it as the source for the recorded video
                 mediaRecorder.onstop = () => {
-                    const blob = new Blob(recordedChunks, { type: 'video/webm' });
-                    const url = URL.createObjectURL(blob);
-                    recordedVideo.src = url;
-                    recordedChunks = []; // Reset the chunks for the next recording
+                    if (recordedChunks.length > 0) {
+                        const blob = new Blob(recordedChunks, { type: 'video/webm' });
+                        const url = URL.createObjectURL(blob);
+                        recordedVideo.src = url;
+                        recordedChunks = []; // Reset the chunks for the next recording
 
-                    // Enable the download button after recording
-                    downloadButton.disabled = false;
+                        // Enable the download button after recording
+                        downloadButton.disabled = false;
+                    }
                 };
             })
             .catch(error => {
@@ -202,24 +204,28 @@
 
         // Download video as WebM
         downloadWebMButton.addEventListener('click', () => {
-            const blob = new Blob(recordedChunks, { type: 'video/webm' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'recorded-video.webm';
-            a.click();
-            popup.style.display = 'none';
+            if (recordedChunks.length > 0) {
+                const blob = new Blob(recordedChunks, { type: 'video/webm' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'recorded-video.webm';
+                a.click();
+                popup.style.display = 'none';
+            }
         });
 
         // Download video as MP4 (using WebM as fallback, as real MP4 conversion on the client side is complex)
         downloadMP4Button.addEventListener('click', () => {
-            const blob = new Blob(recordedChunks, { type: 'video/mp4' }); // Note: In reality, you'd need a server-side conversion
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'recorded-video.mp4';
-            a.click();
-            popup.style.display = 'none';
+            if (recordedChunks.length > 0) {
+                const blob = new Blob(recordedChunks, { type: 'video/mp4' }); // Note: In reality, you'd need a server-side conversion
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'recorded-video.mp4';
+                a.click();
+                popup.style.display = 'none';
+            }
         });
     </script>
 
